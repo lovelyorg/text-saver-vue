@@ -14,73 +14,67 @@ import { MessageBox } from "mint-ui";
 import { Toast } from "mint-ui";
 import axios from "axios";
 import CryptoJS from "crypto-js";
-import aes from '../js/aes.js';
-import keyManager from '../js/keyManager.js';
+import aes from "../js/aes.js";
+import keyManager from "../js/keyManager.js";
 
 export default {
   name: "list",
   data() {
     return {
       fileList: [],
-      skey: '',
+      skey: "",
       typeKeyCount: 0
     };
   },
   methods: {
-    checkKey: function () {
-      const ckey = keyManager.getKey()
-      if (!ckey) return false
-      if (aes.encrypt(ckey, ckey) != this.skey)
-        return false
-      return true
+    checkKey: function() {
+      const ckey = keyManager.getKey();
+      if (!ckey) return false;
+      if (aes.encrypt(ckey, ckey) != this.skey) return false;
+      return true;
     },
-    setKey: function () {
-      return new Promise(s => {
-        let msg = ''
-        if (this.typeKeyCount <= 0) msg = '请输入密码'
-        else if (this.typeKeyCount == 1) msg = '密码错误, 请重新输入'
-        else msg = `密码错误, 请重新输入 <br/>the ${this.typeKeyCount} attempt`
-        this.typeKeyCount++
-        MessageBox.prompt(msg).then(({ value, action }) => {
-          keyManager.setKey(value);
-          s()
-        })
-      })
-    },
-    newFile: async function () {
-      // MessageBox.prompt('输入新文件名').then(({ value, action }) => {
-      //   console.log(value)
-      // })
-      let newFilename = ''
+    setKey: async function() {
+      let msg = "";
+      if (this.typeKeyCount <= 0) msg = "请输入密码";
+      else if (this.typeKeyCount == 1) msg = "密码错误, 请重新输入";
+      else msg = `密码错误, 请重新输入 <br/>the ${this.typeKeyCount} attempt`;
+      this.typeKeyCount++;
       try {
-        newFilename = await MessageBox.prompt('输入新文件名');
-        newFilename = newFilename.value
+        let key = await MessageBox.prompt(msg);
+        keyManager.setKey(key.value);
+      } catch (error) {}
+    },
+    newFile: async function() {
+      let newFilename = "";
+      try {
+        newFilename = await MessageBox.prompt("输入新文件名");
+        newFilename = newFilename.value;
 
-        if (new RegExp('[\\\\/:*?\"<>|.]').test(newFilename))
-          return Toast('文件名不允许特殊字符')
-      } catch (error) { }
+        if (new RegExp('[\\\\/:*?"<>|.]').test(newFilename))
+          return Toast("文件名不允许特殊字符");
+      } catch (error) {}
 
-      if (!newFilename) return
+      if (!newFilename) return;
 
       try {
-        let data = await axios.post(`file\\${newFilename}`)
-        data = data.data
+        let data = await axios.post(`file\\${newFilename}`);
+        data = data.data;
         if (data) {
-          return Toast(data)
+          return Toast(data);
         }
-        this.$router.push(`file/${newFilename}`)
+        this.$router.push(`file/${newFilename}`);
       } catch (error) {
-        console.error(error)
-        Toast('网络异常')
+        console.error(error);
+        Toast("网络异常");
       }
     }
   },
-  mounted: async function () {
-    let m = await axios.get("./static/data/list.json")
+  mounted: async function() {
+    let m = await axios.get("./static/data/list.json");
     //验证密码
-    this.skey = m.data.key
+    this.skey = m.data.key;
     while (!this.checkKey()) {
-      await this.setKey()
+      await this.setKey();
     }
     this.fileList = m.data.files;
   }
