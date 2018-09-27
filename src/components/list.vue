@@ -37,12 +37,14 @@ export default {
       if (!newFilename) return;
 
       try {
-        let data = await axios.post(`file\\${newFilename}`);
+        let data = await axios.post(
+          `${this.$route.params.user}/${newFilename}`
+        );
         data = data.data;
         if (data) {
           return Toast(data);
         }
-        this.$router.push(`file/${newFilename}`);
+        this.$router.push(`/${this.$route.params.user}/file/${newFilename}`);
       } catch (error) {
         console.error(error);
         Toast("网络异常");

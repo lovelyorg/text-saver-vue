@@ -32,9 +32,12 @@ export default {
       try {
         let data = aes.encrypt(this.filecontent, keyManager.getKey());
         console.log(data);
-        let result = await axios.put(`file/${this.$route.params.filename}`, {
-          data: data
-        });
+        let result = await axios.put(
+          `${this.$route.params.user}/${this.$route.params.filename}`,
+          {
+            data: data
+          }
+        );
         result = result.data;
         if (result) return Toast(result);
         Toast("更新成功");
@@ -47,7 +50,9 @@ export default {
       try {
         await MessageBox.confirm("确认删除？", "提示");
         try {
-          await axios.delete(`file/${this.$route.params.filename}`);
+          await axios.delete(
+            `${this.$route.params.user}/${this.$route.params.filename}`
+          );
           Toast("删除成功");
           this.$router.go(-1);
         } catch (error) {
