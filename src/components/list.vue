@@ -1,8 +1,8 @@
 <template>
   <div>
-    <mt-header fixed title="hello "></mt-header>
-    <div style="height:40px"></div>
-    <router-link v-for="file in fileList" :to="'/file/'+file" :key="file" icon="more" slot="right">
+    <mt-header fixed title="list"></mt-header>
+    <div style="height:28px"></div>
+    <router-link v-for="file in fileList" :to="`/${$route.params.user}/file/${file}`" :key="file" icon="more" slot="right">
       <mt-cell :title="file"></mt-cell>
     </router-link>
     <mt-button type="primary" size="small" @click="newFile" style="position: fixed;bottom: 16px;right: 16px;">new</mt-button>
@@ -13,7 +13,6 @@
 import { MessageBox } from "mint-ui";
 import { Toast } from "mint-ui";
 import axios from "axios";
-import CryptoJS from "crypto-js";
 import aes from "../js/aes.js";
 import keyManager from "../js/keyManager.js";
 
@@ -21,29 +20,10 @@ export default {
   name: "list",
   data() {
     return {
-      fileList: [],
-      skey: "",
-      typeKeyCount: 0
+      fileList: []
     };
   },
   methods: {
-    checkKey: function() {
-      const ckey = keyManager.getKey();
-      if (!ckey) return false;
-      if (aes.encrypt(ckey, ckey) != this.skey) return false;
-      return true;
-    },
-    setKey: async function() {
-      let msg = "";
-      if (this.typeKeyCount <= 0) msg = "请输入密码";
-      else if (this.typeKeyCount == 1) msg = "密码错误, 请重新输入";
-      else msg = `密码错误, 请重新输入 <br/>the ${this.typeKeyCount} attempt`;
-      this.typeKeyCount++;
-      try {
-        let key = await MessageBox.prompt(msg);
-        keyManager.setKey(key.value);
-      } catch (error) {}
-    },
     newFile: async function() {
       let newFilename = "";
       try {
@@ -70,13 +50,14 @@ export default {
     }
   },
   mounted: async function() {
-    let m = await axios.get("./static/data/list.json");
-    //验证密码
-    this.skey = m.data.key;
-    while (!this.checkKey()) {
-      await this.setKey();
+    if (!keyManager.checkKey()) {
+      this.$router.push(`/${this.$route.params.user}`);
     }
-    this.fileList = m.data.files;
+
+    let m = await axios.get(
+      `./static/data/${this.$route.params.user}/conf/list`
+    );
+    this.fileList = m.data;
   }
 };
 </script>
