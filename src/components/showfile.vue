@@ -63,7 +63,11 @@ export default {
 
     let data = "";
     try {
-      data = await axios.get(`./static/data/${this.$route.params.filename}`);
+      data = await axios.get(
+        `./static/data/${this.$route.params.user}/txt/${
+          this.$route.params.filename
+        }`
+      );
       data = data.data;
     } catch (error) {
       console.error(error);
