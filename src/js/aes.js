@@ -16,7 +16,8 @@ function encrypt(word, key) {
     mode: CryptoJS.mode.CBC,
     padding: CryptoJS.pad.Pkcs7
   });
-  return encrypted.ciphertext.toString().toUpperCase();
+  console.log(CryptoJS.enc.Base64.stringify(encrypted.ciphertext))
+  return CryptoJS.enc.Base64.stringify(encrypted.ciphertext);
 }
 
 function decrypt(word, key) {
@@ -27,7 +28,7 @@ function decrypt(word, key) {
       })
       .join("")
   );
-  let encryptedHexStr = CryptoJS.enc.Hex.parse(word);
+  let encryptedHexStr = CryptoJS.enc.Base64.parse(word);
   let srcs = CryptoJS.enc.Base64.stringify(encryptedHexStr);
   let decrypt = CryptoJS.AES.decrypt(srcs, key, {
     iv: iv,

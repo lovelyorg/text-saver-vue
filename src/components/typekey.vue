@@ -8,6 +8,7 @@
 <script>
 import { Toast } from "mint-ui";
 import axios from "axios";
+import aes from "../js/aes";
 import keyManager from "../js/keyManager.js";
 
 export default {
@@ -22,6 +23,8 @@ export default {
     checkKey: async function() {
       keyManager.setKey(this.password);
       if (keyManager.checkKey()) {
+        let mingwen = aes.decrypt(keyManager.getData(), keyManager.getKey());
+        keyManager.setPlainttext(mingwen);
         this.$router.push(`${this.$route.params.user}/list`);
         return;
       }
@@ -39,10 +42,9 @@ export default {
     }
   },
   mounted: async function() {
-    let m = await axios.get(
-      `./static/data/${this.$route.params.user}/conf/key`
-    );
-    keyManager.setServersideEncryptedKey(m.data);
+    let m = await axios.get(`./static/data/${this.$route.params.user}/data`);
+    console.log(m.data);
+    keyManager.setData(m.data);
   }
 };
 </script>

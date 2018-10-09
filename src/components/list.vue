@@ -13,7 +13,6 @@
 import { MessageBox } from "mint-ui";
 import { Toast } from "mint-ui";
 import axios from "axios";
-import aes from "../js/aes.js";
 import keyManager from "../js/keyManager.js";
 
 export default {
@@ -37,13 +36,12 @@ export default {
       if (!newFilename) return;
 
       try {
-        let data = await axios.post(
-          `${this.$route.params.user}/${newFilename}`
-        );
-        data = data.data;
-        if (data) {
-          return Toast(data);
-        }
+        var plainttext = keyManager.getPlainttext();
+        if (plainttext.find(m => m.title == newFilename))
+          return Toast("文件已存在");
+        plainttext.push({ title: newFilename, content: "" });
+        keyManager.setPlainttext(JSON.stringify(plainttext));
+
         this.$router.push(`/${this.$route.params.user}/file/${newFilename}`);
       } catch (error) {
         console.error(error);
@@ -55,11 +53,10 @@ export default {
     if (!keyManager.checkKey()) {
       this.$router.push(`/${this.$route.params.user}`);
     }
-
-    let m = await axios.get(
-      `./static/data/${this.$route.params.user}/conf/list`
-    );
-    this.fileList = m.data;
+    let data = keyManager.getPlainttext();
+    this.fileList = data.map(m => {
+      return m.title;
+    });
   }
 };
 </script>

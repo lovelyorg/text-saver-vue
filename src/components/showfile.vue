@@ -16,6 +16,14 @@ import { Toast } from "mint-ui";
 import aes from "../js/aes";
 import keyManager from "../js/keyManager.js";
 
+Array.prototype.delete = function(fun) {
+  let result = [];
+  this.forEach(m => {
+    if (!fun(m)) result.push(m);
+  });
+  return result;
+};
+
 export default {
   name: "showfile",
   data() {
@@ -30,16 +38,19 @@ export default {
   methods: {
     saveFile: async function() {
       try {
-        let data = aes.encrypt(this.filecontent, keyManager.getKey());
-        console.log(data);
-        let result = await axios.put(
-          `${this.$route.params.user}/${this.$route.params.filename}`,
-          {
-            data: data
-          }
-        );
+        var plainttext = keyManager.getPlainttext();
+        plainttext.find(
+          m => m.title == this.$route.params.filename
+        ).content = this.filecontent;
+        console.log(plainttext);
+
+        let data = aes.encrypt(JSON.stringify(plainttext), keyManager.getKey());
+        let result = await axios.put(`${this.$route.params.user}`, {
+          data: data
+        });
         result = result.data;
         if (result) return Toast(result);
+        keyManager.setPlainttext(JSON.stringify(plainttext));
         Toast("更新成功");
       } catch (error) {
         console.error(error);
@@ -50,10 +61,17 @@ export default {
       try {
         await MessageBox.confirm("确认删除？", "提示");
         try {
-          await axios.delete(
-            `${this.$route.params.user}/${this.$route.params.filename}`
-          );
+          const dexxx = keyManager
+            .getPlainttext()
+            .delete(m => m.title == this.$route.params.filename);
+          let data = aes.encrypt(JSON.stringify(dexxx), keyManager.getKey());
+          let result = await axios.put(`${this.$route.params.user}`, {
+            data: data
+          });
+          result = result.data;
+          if (result) return Toast(result);
           Toast("删除成功");
+          keyManager.setPlainttext(JSON.stringify(dexxx));
           this.$router.go(-1);
         } catch (error) {
           Toast("删除失败");
@@ -66,21 +84,14 @@ export default {
       this.$router.push(`/${this.$route.params.user}`);
     }
 
-    let data = "";
+    let plaintext = "";
     try {
-      data = await axios.get(
-        `./static/data/${this.$route.params.user}/txt/${
-          this.$route.params.filename
-        }`
-      );
-      data = data.data;
+      let xx = keyManager.getPlainttext();
+      plaintext = xx.find(m => m.title == this.$route.params.filename).content;
     } catch (error) {
       console.error(error);
       return Toast("数据异常");
     }
-    //得到明文
-    const plaintext = aes.decrypt(data, keyManager.getKey());
-    console.log(plaintext);
     this.filecontent = plaintext;
     this.filecontentOld = plaintext;
   },

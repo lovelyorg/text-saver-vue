@@ -8,24 +8,37 @@ function setKey(value) {
   sessionStorage.setItem("theUserTypedKey", value);
 }
 
-function getServersideEncryptedKey() {
-  return sessionStorage.getItem("serversideEncryptedKey");
+function getData() {
+  return sessionStorage.getItem("ciphertext");
 }
 
-function setServersideEncryptedKey(value) {
-  sessionStorage.setItem("serversideEncryptedKey", value);
+function setData(value) {
+  sessionStorage.setItem("ciphertext", value);
+}
+
+function getPlainttext() {
+  return JSON.parse(sessionStorage.getItem("plainttext"));
+}
+
+function setPlainttext(value) {
+  sessionStorage.setItem("plainttext", value);
 }
 
 export default {
   getKey: getkey,
   setKey: setKey,
-  getServersideEncryptedKey: getServersideEncryptedKey,
-  setServersideEncryptedKey: setServersideEncryptedKey,
+  getData: getData,
+  setData: setData,
+  getPlainttext: getPlainttext,
+  setPlainttext: setPlainttext,
   checkKey: () => {
-    const theUserTypedKey = getkey()
-    const serversideEncryptedKey = getServersideEncryptedKey()
-    return (theUserTypedKey && serversideEncryptedKey &&
-      aes.encrypt(theUserTypedKey, theUserTypedKey) == serversideEncryptedKey
-    )
+    const key = getkey()
+    const data = getData()
+    try {
+      let mingwen = aes.decrypt(data, key)
+      return true
+    } catch (error) {
+      return false
+    }
   }
 };
