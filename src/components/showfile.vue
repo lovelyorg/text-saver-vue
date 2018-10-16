@@ -16,14 +16,6 @@ import { Toast } from "mint-ui";
 import aes from "../js/aes";
 import keyManager from "../js/keyManager.js";
 
-Array.prototype.delete = function(fun) {
-  let result = [];
-  this.forEach(m => {
-    if (!fun(m)) result.push(m);
-  });
-  return result;
-};
-
 export default {
   name: "showfile",
   data() {
@@ -63,7 +55,7 @@ export default {
         try {
           const dexxx = keyManager
             .getPlainttext()
-            .delete(m => m.title == this.$route.params.filename);
+            .filter(m => m.title != this.$route.params.filename);
           let data = aes.encrypt(JSON.stringify(dexxx), keyManager.getKey());
           let result = await axios.put(`${this.$route.params.user}`, {
             data: data
